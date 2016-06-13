@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="text/javascript" src="lib/d3.min.js"></script>
+	<script type="text/javascript" src="lib/underscore-min.js"></script>
+    <script type="text/javascript" src="lib/math.min.js"></script>
+    
+    <script type="text/javascript" src="src/hyperShape.js"></script>
+    <script type="text/javascript" src="src/Rotator.js"></script>
+</head>
+<body>
+    <div id="viz"></div>
+    
+    <div>
+        Dimensions: 
+        <select id="dimensions">
+        <option value=2>2</option>
+        <option value=3>3 </option>
+        <option value=4 selected>4 </option>
+        <option value=5>5 </option>
+        <option value=6>6 </option>
+        <option value=7>7 </option>
+        <option value=8>8 </option>
+    </select>
+    </div>
+    
+    <div>
+        <button type="button" onclick="restart()">Restart</button>
+    </div>
+    
+    <script type="text/javascript">
+    
+    var size = 600;
+    var scale = 120;
+    
+    // Make SVG
+    var svg = d3.select("#viz")
+        .append("svg")
+        .attr("width", size)
+        .attr("height", size)
+        .append("g")
+        .attr("transform", "translate(" + size/2 + "," + size/2 + ")");
+        
+    // Make main state
+    var state = {
+        svg: svg,
+        dimensions: getDimensions(),
+        hypercube: null,
+        angles: null,
+        rm: null,
+        counter: null,
+        counterLimit: null,
+        loop: null
+    }
+    
+    start(state);
+       
+    // Functions
+    function getDimensions(){
+        return +document.getElementById("dimensions").value;
+    }
+    
+    function restart(){
+        clear(state);
+        start(state);
+    } 
+    
+    function clear(state){
+        clearInterval(state.loop);
+        state.hypercube.remove();
+    }
+    
+    function start(state){
+        var dimensions = getDimensions();
+        
+        state.dimensions = dimensions;
+        state.hypercube = Hypercube(dimensions, state.svg, scale);
+        state.angles = Rotator.getAllRandomAngles(dimensions);
+        state.rm = Rotator.fullRotationMatrix(dimensions, state.angles);
+        state.counter = 0;
+        state.counterLimit = 10;
+        state.loop = setUpLoop(state);
+    }
+    
+    function setUpLoop(state){
+        return setInterval(function() {
+            if(state.counter > state.counterLimit){
+                Rotator.mutateAngles(state.angles);
+                state.rm = Rotator.fullRotationMatrix(state.dimensions, state.angles);
+            }     
+            state.hypercube.rotate(state.rm);
+            state.hypercube.render();
+            state.counter += 1;
+        }, 20);
+    }
+    
+    </script>
+</body>
+</html>
